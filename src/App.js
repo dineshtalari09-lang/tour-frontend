@@ -4,9 +4,9 @@ function App() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -15,7 +15,6 @@ function App() {
     if (!input.trim()) return;
 
     const userMessage = { role: "user", content: input };
-
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
@@ -40,11 +39,55 @@ function App() {
     setLoading(false);
   };
 
+  const toggleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  const renderAssistantMessage = (content, index) => {
+    const sections = content.split("\n\n");
+
+    return (
+      <div>
+        {sections.slice(0, 2).map((section, i) => (
+          <p key={i}>{section}</p>
+        ))}
+
+        {sections.length > 2 && (
+          <>
+            <button
+              onClick={() => toggleExpand(index)}
+              style={{
+                marginTop: "10px",
+                padding: "6px 12px",
+                borderRadius: "10px",
+                border: "none",
+                background: "linear-gradient(135deg,#3b82f6,#9333ea)",
+                color: "white",
+                cursor: "pointer",
+                fontSize: "12px",
+              }}
+            >
+              {expandedIndex === index ? "Hide Details" : "View Full Plan"}
+            </button>
+
+            {expandedIndex === index && (
+              <div style={{ marginTop: "10px" }}>
+                {sections.slice(2).map((section, i) => (
+                  <p key={i}>{section}</p>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       style={{
         minHeight: "100vh",
-        padding: window.innerWidth < 600 ? "20px 10px" : "40px 20px",
+        padding: "20px",
         display: "flex",
         justifyContent: "center",
       }}
@@ -53,41 +96,24 @@ function App() {
         style={{
           backdropFilter: "blur(20px)",
           background: "rgba(255,255,255,0.05)",
-          padding: window.innerWidth < 600 ? "20px" : "30px",
+          padding: "20px",
           borderRadius: "20px",
           width: "100%",
           maxWidth: "900px",
           display: "flex",
           flexDirection: "column",
-          height: window.innerWidth < 600 ? "90vh" : "85vh",
+          height: "90vh",
           boxShadow: "0 0 40px rgba(0,0,0,0.6)",
         }}
       >
-        <h1
-          style={{
-            textAlign: "center",
-            marginBottom: "20px",
-            fontWeight: "600",
-            fontSize: window.innerWidth < 600 ? "20px" : "26px",
-            letterSpacing: "1px",
-          }}
-        >
+        <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
           ✨ AI Travel Assistant
         </h1>
 
-        {/* Chat Area */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            marginBottom: "15px",
-            paddingRight: "5px",
-          }}
-        >
+        <div style={{ flex: 1, overflowY: "auto", marginBottom: "15px" }}>
           {messages.map((msg, index) => (
             <div
               key={index}
-              className="message-bubble"
               style={{
                 display: "flex",
                 justifyContent:
@@ -97,7 +123,7 @@ function App() {
             >
               <div
                 style={{
-                  maxWidth: window.innerWidth < 600 ? "85%" : "70%",
+                  maxWidth: "80%",
                   padding: "12px 16px",
                   borderRadius: "15px",
                   background:
@@ -106,23 +132,17 @@ function App() {
                       : "rgba(255,255,255,0.1)",
                   color: "white",
                   whiteSpace: "pre-wrap",
-                  fontSize: window.innerWidth < 600 ? "14px" : "15px",
                 }}
               >
-                {msg.content}
+                {msg.role === "assistant"
+                  ? renderAssistantMessage(msg.content, index)
+                  : msg.content}
               </div>
             </div>
           ))}
 
           {loading && (
-            <div
-              style={{
-                color: "white",
-                opacity: 0.7,
-                fontStyle: "italic",
-                fontSize: "14px",
-              }}
-            >
+            <div style={{ color: "white", opacity: 0.7 }}>
               ✨ AI is designing your experience...
             </div>
           )}
@@ -130,14 +150,7 @@ function App() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Section */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: window.innerWidth < 600 ? "column" : "row",
-            gap: "10px",
-          }}
-        >
+        <div style={{ display: "flex", gap: "10px" }}>
           <input
             type="text"
             value={input}
@@ -154,23 +167,19 @@ function App() {
               outline: "none",
               background: "rgba(255,255,255,0.1)",
               color: "white",
-              fontSize: "14px",
             }}
           />
 
           <button
             onClick={sendMessage}
-            className="luxury-button"
             style={{
-              padding: "12px",
+              padding: "12px 20px",
               borderRadius: "12px",
               border: "none",
               cursor: "pointer",
               background: "linear-gradient(135deg,#3b82f6,#9333ea)",
               color: "white",
               fontWeight: "600",
-              transition: "all 0.3s ease",
-              width: window.innerWidth < 600 ? "100%" : "auto",
             }}
           >
             Send
