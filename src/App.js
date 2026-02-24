@@ -6,7 +6,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Auto scroll to latest message
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -44,7 +44,7 @@ function App() {
     <div
       style={{
         minHeight: "100vh",
-        padding: "40px 20px",
+        padding: window.innerWidth < 600 ? "20px 10px" : "40px 20px",
         display: "flex",
         justifyContent: "center",
       }}
@@ -53,13 +53,13 @@ function App() {
         style={{
           backdropFilter: "blur(20px)",
           background: "rgba(255,255,255,0.05)",
-          padding: "30px",
+          padding: window.innerWidth < 600 ? "20px" : "30px",
           borderRadius: "20px",
           width: "100%",
           maxWidth: "900px",
           display: "flex",
           flexDirection: "column",
-          height: "85vh",
+          height: window.innerWidth < 600 ? "90vh" : "85vh",
           boxShadow: "0 0 40px rgba(0,0,0,0.6)",
         }}
       >
@@ -68,19 +68,20 @@ function App() {
             textAlign: "center",
             marginBottom: "20px",
             fontWeight: "600",
+            fontSize: window.innerWidth < 600 ? "20px" : "26px",
             letterSpacing: "1px",
           }}
         >
           ✨ AI Travel Assistant
         </h1>
 
-        {/* Chat Messages */}
+        {/* Chat Area */}
         <div
           style={{
             flex: 1,
             overflowY: "auto",
-            marginBottom: "20px",
-            paddingRight: "10px",
+            marginBottom: "15px",
+            paddingRight: "5px",
           }}
         >
           {messages.map((msg, index) => (
@@ -91,12 +92,12 @@ function App() {
                 display: "flex",
                 justifyContent:
                   msg.role === "user" ? "flex-end" : "flex-start",
-                marginBottom: "15px",
+                marginBottom: "12px",
               }}
             >
               <div
                 style={{
-                  maxWidth: "70%",
+                  maxWidth: window.innerWidth < 600 ? "85%" : "70%",
                   padding: "12px 16px",
                   borderRadius: "15px",
                   background:
@@ -105,6 +106,7 @@ function App() {
                       : "rgba(255,255,255,0.1)",
                   color: "white",
                   whiteSpace: "pre-wrap",
+                  fontSize: window.innerWidth < 600 ? "14px" : "15px",
                 }}
               >
                 {msg.content}
@@ -118,7 +120,7 @@ function App() {
                 color: "white",
                 opacity: 0.7,
                 fontStyle: "italic",
-                animation: "fadeInMessage 0.3s ease-in-out",
+                fontSize: "14px",
               }}
             >
               ✨ AI is designing your experience...
@@ -129,7 +131,13 @@ function App() {
         </div>
 
         {/* Input Section */}
-        <div style={{ display: "flex" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: window.innerWidth < 600 ? "column" : "row",
+            gap: "10px",
+          }}
+        >
           <input
             type="text"
             value={input}
@@ -146,7 +154,7 @@ function App() {
               outline: "none",
               background: "rgba(255,255,255,0.1)",
               color: "white",
-              marginRight: "10px",
+              fontSize: "14px",
             }}
           />
 
@@ -154,7 +162,7 @@ function App() {
             onClick={sendMessage}
             className="luxury-button"
             style={{
-              padding: "12px 20px",
+              padding: "12px",
               borderRadius: "12px",
               border: "none",
               cursor: "pointer",
@@ -162,6 +170,7 @@ function App() {
               color: "white",
               fontWeight: "600",
               transition: "all 0.3s ease",
+              width: window.innerWidth < 600 ? "100%" : "auto",
             }}
           >
             Send
