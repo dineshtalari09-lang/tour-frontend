@@ -1,109 +1,158 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 function App() {
-  const [city, setCity] = useState("");
-  const [data, setData] = useState("");
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [displayText, setDisplayText] = useState("");
+  const messagesEndRef = useRef(null);
 
-  const getPlan = async () => {
-  if (!city) return;
-
-  setLoading(true);
-  setDisplayText("");
-
-  const response = await fetch(
-    `https://tour-backend-bwcq.onrender.com/plan?query=Plan a 2 day trip to ${city}`
-  );
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder("utf-8");
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value);
-    setDisplayText((prev) => prev + chunk);
-  }
-
-  setLoading(false);
-};
-
-  // Typing animation effect
+  // Auto scroll to latest message
   useEffect(() => {
-    if (!data) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
-    let index = 0;
-    const interval = setInterval(() => {
-      setDisplayText((prev) => prev + data.charAt(index));
-      index++;
-      if (index >= data.length) {
-        clearInterval(interval);
-      }
-    }, 15); // speed (lower = faster)
+  const sendMessage = async () => {
+    if (!input.trim()) return;
 
-    return () => clearInterval(interval);
-  }, [data]);
+    const userMessage = { role: "user", content: input };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `https://tour-backend-bwcq.onrender.com/plan?query=${encodeURIComponent(input)}`
+      );
+
+      const result = await response.json();
+
+      const aiMessage = {
+        role: "assistant",
+        content: result.response,
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div
       style={{
         minHeight: "100vh",
-        padding: "60px 20px",
+        padding: "40px 20px",
         display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       <div
         style={{
           backdropFilter: "blur(20px)",
           background: "rgba(255,255,255,0.05)",
-          padding: "40px",
+          padding: "30px",
           borderRadius: "20px",
           width: "100%",
           maxWidth: "900px",
+          display: "flex",
+          flexDirection: "column",
+          height: "85vh",
           boxShadow: "0 0 40px rgba(0,0,0,0.6)",
         }}
       >
         <h1
           style={{
             textAlign: "center",
-            marginBottom: "30px",
+            marginBottom: "20px",
             fontWeight: "600",
             letterSpacing: "1px",
           }}
         >
-          ✨ AI Luxury Travel Planner
+          ✨ AI Travel Assistant
         </h1>
 
+        {/* Chat Messages */}
         <div
           style={{
-            display: "flex",
-            justifyContent: "center",
-            marginBottom: "30px",
+            flex: 1,
+            overflowY: "auto",
+            marginBottom: "20px",
+            paddingRight: "10px",
           }}
         >
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className="message-bubble"
+              style={{
+                display: "flex",
+                justifyContent:
+                  msg.role === "user" ? "flex-end" : "flex-start",
+                marginBottom: "15px",
+              }}
+            >
+              <div
+                style={{
+                  maxWidth: "70%",
+                  padding: "12px 16px",
+                  borderRadius: "15px",
+                  background:
+                    msg.role === "user"
+                      ? "linear-gradient(135deg,#3b82f6,#9333ea)"
+                      : "rgba(255,255,255,0.1)",
+                  color: "white",
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {msg.content}
+              </div>
+            </div>
+          ))}
+
+          {loading && (
+            <div
+              style={{
+                color: "white",
+                opacity: 0.7,
+                fontStyle: "italic",
+                animation: "fadeInMessage 0.3s ease-in-out",
+              }}
+            >
+              ✨ AI is designing your experience...
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Section */}
+        <div style={{ display: "flex" }}>
           <input
             type="text"
-            placeholder="Enter destination..."
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
+            value={input}
+            placeholder="Ask about any destination..."
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") sendMessage();
+            }}
             style={{
+              flex: 1,
               padding: "12px",
-              width: "60%",
               borderRadius: "12px",
               border: "none",
               outline: "none",
-              marginRight: "10px",
               background: "rgba(255,255,255,0.1)",
               color: "white",
+              marginRight: "10px",
             }}
           />
 
           <button
+            onClick={sendMessage}
             className="luxury-button"
-            onClick={getPlan}
             style={{
               padding: "12px 20px",
               borderRadius: "12px",
@@ -112,33 +161,12 @@ function App() {
               background: "linear-gradient(135deg,#3b82f6,#9333ea)",
               color: "white",
               fontWeight: "600",
-              transition: "all 0.3s ease"
+              transition: "all 0.3s ease",
             }}
           >
-            Plan
+            Send
           </button>
         </div>
-
-        {loading && (
-          <p style={{ textAlign: "center" }}>
-            Designing your luxury experience...
-          </p>
-        )}
-
-        {displayText && (
-          <div
-            className="response-card"
-            style={{
-              background: "rgba(255,255,255,0.07)",
-              padding: "25px",
-              borderRadius: "15px",
-              lineHeight: "1.7",
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {displayText}
-          </div>
-        )}
       </div>
     </div>
   );
