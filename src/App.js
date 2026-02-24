@@ -7,21 +7,52 @@ function App() {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const messagesEndRef = useRef(null);
 
+  // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  // Convert URLs to clickable links
+  const renderWithLinks = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "#60a5fa",
+              textDecoration: "underline",
+              wordBreak: "break-all",
+            }}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage = { role: "user", content: input };
+
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
 
     try {
       const response = await fetch(
-        `https://tour-backend-bwcq.onrender.com/plan?query=${encodeURIComponent(input)}`
+        `https://tour-backend-bwcq.onrender.com/plan?query=${encodeURIComponent(
+          input
+        )}`
       );
 
       const result = await response.json();
@@ -49,7 +80,7 @@ function App() {
     return (
       <div>
         {sections.slice(0, 2).map((section, i) => (
-          <p key={i}>{section}</p>
+          <p key={i}>{renderWithLinks(section)}</p>
         ))}
 
         {sections.length > 2 && (
@@ -73,7 +104,7 @@ function App() {
             {expandedIndex === index && (
               <div style={{ marginTop: "10px" }}>
                 {sections.slice(2).map((section, i) => (
-                  <p key={i}>{section}</p>
+                  <p key={i}>{renderWithLinks(section)}</p>
                 ))}
               </div>
             )}
@@ -87,7 +118,7 @@ function App() {
     <div
       style={{
         minHeight: "100vh",
-        padding: "20px",
+        padding: window.innerWidth < 600 ? "15px" : "40px",
         display: "flex",
         justifyContent: "center",
       }}
@@ -96,24 +127,33 @@ function App() {
         style={{
           backdropFilter: "blur(20px)",
           background: "rgba(255,255,255,0.05)",
-          padding: "20px",
+          padding: window.innerWidth < 600 ? "15px" : "30px",
           borderRadius: "20px",
           width: "100%",
           maxWidth: "900px",
           display: "flex",
           flexDirection: "column",
-          height: "90vh",
+          height: window.innerWidth < 600 ? "92vh" : "85vh",
           boxShadow: "0 0 40px rgba(0,0,0,0.6)",
         }}
       >
-        <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
+        <h1
+          style={{
+            textAlign: "center",
+            marginBottom: "20px",
+            fontWeight: "600",
+            fontSize: window.innerWidth < 600 ? "20px" : "26px",
+          }}
+        >
           ✨ AI Travel Assistant
         </h1>
 
+        {/* Chat Area */}
         <div style={{ flex: 1, overflowY: "auto", marginBottom: "15px" }}>
           {messages.map((msg, index) => (
             <div
               key={index}
+              className="message-bubble"
               style={{
                 display: "flex",
                 justifyContent:
@@ -123,7 +163,7 @@ function App() {
             >
               <div
                 style={{
-                  maxWidth: "80%",
+                  maxWidth: window.innerWidth < 600 ? "85%" : "70%",
                   padding: "12px 16px",
                   borderRadius: "15px",
                   background:
@@ -132,6 +172,7 @@ function App() {
                       : "rgba(255,255,255,0.1)",
                   color: "white",
                   whiteSpace: "pre-wrap",
+                  fontSize: window.innerWidth < 600 ? "14px" : "15px",
                 }}
               >
                 {msg.role === "assistant"
@@ -142,7 +183,14 @@ function App() {
           ))}
 
           {loading && (
-            <div style={{ color: "white", opacity: 0.7 }}>
+            <div
+              style={{
+                color: "white",
+                opacity: 0.7,
+                fontStyle: "italic",
+                fontSize: "14px",
+              }}
+            >
               ✨ AI is designing your experience...
             </div>
           )}
@@ -150,7 +198,14 @@ function App() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        {/* Input Area */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: window.innerWidth < 600 ? "column" : "row",
+            gap: "10px",
+          }}
+        >
           <input
             type="text"
             value={input}
@@ -167,19 +222,21 @@ function App() {
               outline: "none",
               background: "rgba(255,255,255,0.1)",
               color: "white",
+              fontSize: "14px",
             }}
           />
 
           <button
             onClick={sendMessage}
             style={{
-              padding: "12px 20px",
+              padding: "12px",
               borderRadius: "12px",
               border: "none",
               cursor: "pointer",
               background: "linear-gradient(135deg,#3b82f6,#9333ea)",
               color: "white",
               fontWeight: "600",
+              width: window.innerWidth < 600 ? "100%" : "auto",
             }}
           >
             Send
